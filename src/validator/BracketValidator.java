@@ -8,8 +8,8 @@ import java.util.Map;
 
 public class BracketValidator {
 
-    private int left;
-    private int right;
+    private int numOfOpenBkt;
+    private int numOfCloseBkt;
 
     public static void main(String[] args) throws IOException {
         System.out.println("Введите строку для проверки валидности скобок" +
@@ -35,33 +35,33 @@ public class BracketValidator {
     private static boolean firstStep(String str) {
         BracketValidator one = new BracketValidator();
         for (int i = 0; i < str.length(); i++) {
-            if (str.charAt(i) == '{' || str.charAt(i) == '(' || str.charAt(i) == '[') one.left++;
-            else if (str.charAt(i) == '}' || str.charAt(i) == ')' || str.charAt(i) == ']') one.right++;
+            if (str.charAt(i) == '{' || str.charAt(i) == '(' || str.charAt(i) == '[') one.numOfOpenBkt++;
+            else if (str.charAt(i) == '}' || str.charAt(i) == ')' || str.charAt(i) == ']') one.numOfCloseBkt++;
         }
-        return one.left == one.right;
+        return one.numOfOpenBkt == one.numOfCloseBkt;
     }
 
 
     private static Boolean secondValidate(String str) {
-        Map<Integer, Integer> numMap = new HashMap<>(); //<номер откнывающей скобки по порядку, номер скобки в массиве>
+        Map<Integer, Integer> openBktNumMap = new HashMap<>(); //<номер откнывающей скобки по порядку, номер скобки в массиве>
         Map<Integer, Character> valueMap = new HashMap<>(); // <номер откр. скобки по порядку, тип скобки>
         BracketValidator two = new BracketValidator();
-        two.left = 0;
-        two.right = 0;
+        two.numOfOpenBkt = 0;
+        two.numOfCloseBkt = 0;
         for (int i = 0; i < str.length(); i++) {
             if (str.charAt(i) == '{' || str.charAt(i) == '[' || str.charAt(i) == '(') {
-                numMap.put(two.left, i);
-                valueMap.put(two.left, str.charAt(i));
-                two.left++;
+                openBktNumMap.put(two.numOfOpenBkt, i);
+                valueMap.put(two.numOfOpenBkt, str.charAt(i));
+                two.numOfOpenBkt++;
             }
         }
+        StringBuilder withoutBkt = new StringBuilder(str);
         String subStr;
-        String withoutBktStr = "" + str;
-        Character openBkt;
+        char openBkt;
         char closeBkt;
-        int numCloseBktInStr = 0;
-        for (int j = two.left - 1; j >= 0; j--) {
-            subStr = withoutBktStr.substring(numMap.get(j));
+        int numCloseBktInStr;
+        for (int j = two.numOfOpenBkt - 1; j >= 0; j--) {
+            subStr = withoutBkt.substring(openBktNumMap.get(j));
             if (subStr.length() == 1) {
                 return false;
             }
@@ -72,26 +72,18 @@ public class BracketValidator {
                 char symbol = subStr.charAt(k);
                 if (isBkt(symbol)) {
                     if (symbol == closeBkt) {
-                        numCloseBktInStr = withoutBktStr.length() - (subStr.length() - k);
+                        numCloseBktInStr = withoutBkt.length() - (subStr.length() - k);
+                        withoutBkt.deleteCharAt(numCloseBktInStr);
+                        withoutBkt.deleteCharAt(openBktNumMap.get(j));
                         break;
                     } else {
                         return false;
                     }
                 }
             }
-            withoutBktStr = getStrWithoutBkt(withoutBktStr, numMap.get(j), numCloseBktInStr);
         }
 
         return true;
-    }
-
-    private static String getStrWithoutBkt(String str, int openBkt, int closeBkt) {
-        String strWithoutBkt = "";
-        for (int i = 0; i < str.length(); i++) {
-            if (i != openBkt && i != closeBkt)
-                strWithoutBkt += str.charAt(i);
-        }
-        return strWithoutBkt;
     }
 
     private static Character getCloseBkt(Character openBkt) {
@@ -105,11 +97,9 @@ public class BracketValidator {
 
     private static boolean isBkt(char symbol) {
         char[] bkts = {'(', ')', '[', ']', '{', '}'};
-        for (int i = 0; i < bkts.length; i++) {
-            if (bkts[i] == symbol) return true;
+        for (char bkt : bkts) {
+            if (bkt == symbol) return true;
         }
         return false;
     }
-
-
 }
